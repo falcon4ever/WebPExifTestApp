@@ -108,7 +108,7 @@ private fun Content() {
 
         LazyVerticalGrid(
             modifier = Modifier
-                .padding(horizontal = 80.dp),
+                .padding(horizontal = 100.dp),
             columns = GridCells.Fixed(2),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -150,23 +150,17 @@ fun PhotoItem(@RawRes image: Int, useCustomExifInterface: Boolean) {
     var fileType = -1
     try {
         imageStream.use { inputStream ->
-            if (useCustomExifInterface) {
-                val exif = com.epicwindmill.webpexiftestapp.media.ExifInterface(inputStream)
-                orientation = exif.getAttributeInt(
-                    com.epicwindmill.webpexiftestapp.media.ExifInterface.TAG_ORIENTATION,
-                    com.epicwindmill.webpexiftestapp.media.ExifInterface.ORIENTATION_NORMAL
-                ).toString()
-                rotation = exif.getRotationDegrees()
-                fileType =
-                    exif.mMimeType // Note: for prod this isnt needed, for this sample we want to know the file type
-            } else {
-                val exif = androidx.exifinterface.media.ExifInterface(inputStream)
-                orientation = exif.getAttributeInt(
-                    androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION,
-                    androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL
-                ).toString()
-                rotation = exif.getRotationDegrees()
-            }
+            val exif = com.epicwindmill.webpexiftestapp.media.ExifInterface(
+                inputStream,
+                useCustomExifInterface
+            )
+            orientation = exif.getAttributeInt(
+                com.epicwindmill.webpexiftestapp.media.ExifInterface.TAG_ORIENTATION,
+                com.epicwindmill.webpexiftestapp.media.ExifInterface.ORIENTATION_NORMAL
+            ).toString()
+            rotation = exif.getRotationDegrees()
+            fileType =
+                exif.mMimeType // Note: for prod this isnt needed, for this sample we want to know the file type
 
             orientation = if (orientation == "0") {
                 "no exif"

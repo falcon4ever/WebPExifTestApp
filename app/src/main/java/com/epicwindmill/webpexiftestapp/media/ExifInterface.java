@@ -3011,6 +3011,8 @@ public class ExifInterface {
     private static final int WEBP_FILE_SIZE_BYTE_LENGTH = 4;
     private static final byte[] WEBP_CHUNK_TYPE_EXIF = new byte[]{(byte) 0x45, (byte) 0x58,
             (byte) 0x49, (byte) 0x46};
+    private static final byte[] WEBP_EXIF_APP1_SECTION_TYPE_EXIF = new byte[]{(byte) 0x45,
+            (byte) 0x78, (byte) 0x69, (byte) 0x66, (byte) 0x00, (byte) 0x00 };
     private static final byte[] WEBP_VP8_SIGNATURE = new byte[]{(byte) 0x9d, (byte) 0x01,
             (byte) 0x2a};
     private static final byte WEBP_VP8L_SIGNATURE = (byte) 0x2f;
@@ -3021,6 +3023,7 @@ public class ExifInterface {
     private static final byte[] WEBP_CHUNK_TYPE_ANMF = "ANMF".getBytes(Charset.defaultCharset());
     private static final int WEBP_CHUNK_TYPE_VP8X_DEFAULT_LENGTH = 10;
     private static final int WEBP_CHUNK_TYPE_BYTE_LENGTH = 4;
+    private static final int WEBP_EXIF_APP1_SECTION_BYTE_LENGTH = 6;
     private static final int WEBP_CHUNK_SIZE_BYTE_LENGTH = 4;
 
     private static SimpleDateFormat sFormatterPrimary;
@@ -3878,6 +3881,7 @@ public class ExifInterface {
     private FileDescriptor mSeekableFileDescriptor;
     private AssetManager.AssetInputStream mAssetInputStream;
     public int mMimeType;
+    public boolean mUsePatchedExifCode = false;
     private boolean mIsExifDataOnly;
     @SuppressWarnings("unchecked")
     private final HashMap<String, ExifAttribute>[] mAttributes = new HashMap[EXIF_TAGS.length];
@@ -3996,8 +4000,8 @@ public class ExifInterface {
      * @param inputStream the input stream that contains the image data
      * @throws NullPointerException if the input stream is null
      */
-    public ExifInterface(@NonNull InputStream inputStream) throws IOException {
-        this(inputStream, STREAM_TYPE_FULL_IMAGE_DATA);
+    public ExifInterface(@NonNull InputStream inputStream, boolean usePatch) throws IOException {
+        this(inputStream, STREAM_TYPE_FULL_IMAGE_DATA, usePatch);
     }
 
     /**
@@ -4012,11 +4016,12 @@ public class ExifInterface {
      * @throws IOException if an I/O error occurs while retrieving file descriptor via
      *         {@link FileInputStream#getFD()}.
      */
-    public ExifInterface(@NonNull InputStream inputStream, @ExifStreamType int streamType)
+    public ExifInterface(@NonNull InputStream inputStream, @ExifStreamType int streamType, boolean usePatch)
             throws IOException {
         if (inputStream == null) {
             throw new NullPointerException("inputStream cannot be null");
         }
+        mUsePatchedExifCode = usePatch;
         mFilename = null;
 
         mIsExifDataOnly = streamType == STREAM_TYPE_EXIF_DATA_ONLY;
@@ -6219,6 +6224,25 @@ public class ExifInterface {
                     // TODO: Need to handle potential OutOfMemoryError
                     byte[] payload = new byte[chunkSize];
                     in.readFully(payload);
+
+                    // --- Laurence Muller's Patch starts here --- //
+                    if (mUsePatchedExifCode) {
+                        // Check if the payload contains the Exif APP1 section:
+                        // 0x45 0x78 0x69 0x66 0x00 0x00 ("Exif\0\0")
+                        byte[] exifApp1 = Arrays.copyOf(payload, WEBP_EXIF_APP1_SECTION_BYTE_LENGTH);
+                        if (Arrays.equals(WEBP_EXIF_APP1_SECTION_TYPE_EXIF, exifApp1)) {
+                            bytesRead += WEBP_EXIF_APP1_SECTION_BYTE_LENGTH;
+
+                            // The reported chunk size is correct but includes the Exif APP1 section
+                            // we adjus the chunk size here and update the payload to exclude the
+                            // Exif APP1 marker.
+                            int adjustedChunkSize = chunkSize - WEBP_EXIF_APP1_SECTION_BYTE_LENGTH;
+                            payload = Arrays.copyOfRange(payload, WEBP_EXIF_APP1_SECTION_BYTE_LENGTH,
+                                    adjustedChunkSize);
+                        }
+                    }
+                    // --- Laurence Muller's Patch ends here --- //
+
                     // Save offset to EXIF data for handling thumbnail and attribute offsets.
                     mOffsetToExifData = bytesRead;
                     readExifSegment(payload, IFD_TYPE_PRIMARY);
