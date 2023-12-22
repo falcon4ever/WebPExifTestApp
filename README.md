@@ -1,7 +1,7 @@
 
 # Demo app to showcase the exif interface fix for webp 
 
-##Issue
+## Issue
 
 When using https://developer.android.com/jetpack/androidx/releases/exifinterface the EXIF data isn't read in correctly causing rotation information not to be loaded. This bug was found after I noticed that coil wasn't respecting the orientation in webp files. Their jpg counter parts did rotate correctly.
 
