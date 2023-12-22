@@ -68,6 +68,8 @@ private val photos = listOf(
     R.raw.case4_landscape_turned_right_webp,
     R.raw.test_no_exif, // https://developers.google.com/speed/webp/gallery1
     R.raw.test_no_exif_webp,
+    R.raw.webp_without_exif, // https://github.com/androidx/androidx/blob/androidx-main/exifinterface/exifinterface/src/androidTest/res/raw/webp_without_exif.webp
+    R.raw.webp_with_exif,   // https://github.com/androidx/androidx/blob/androidx-main/exifinterface/exifinterface/src/androidTest/res/raw/webp_with_exif.webp
 )
 
 @Composable
