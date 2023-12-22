@@ -6231,8 +6231,6 @@ public class ExifInterface {
                         // 0x45 0x78 0x69 0x66 0x00 0x00 ("Exif\0\0")
                         byte[] exifApp1 = Arrays.copyOf(payload, WEBP_EXIF_APP1_SECTION_BYTE_LENGTH);
                         if (Arrays.equals(WEBP_EXIF_APP1_SECTION_TYPE_EXIF, exifApp1)) {
-                            bytesRead += WEBP_EXIF_APP1_SECTION_BYTE_LENGTH;
-
                             // The reported chunk size is correct but includes the Exif APP1 section
                             // we adjust the chunk size here and update the payload to exclude the
                             // Exif APP1 marker.
