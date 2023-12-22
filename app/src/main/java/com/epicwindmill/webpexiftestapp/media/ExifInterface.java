@@ -6234,7 +6234,7 @@ public class ExifInterface {
                             bytesRead += WEBP_EXIF_APP1_SECTION_BYTE_LENGTH;
 
                             // The reported chunk size is correct but includes the Exif APP1 section
-                            // we adjus the chunk size here and update the payload to exclude the
+                            // we adjust the chunk size here and update the payload to exclude the
                             // Exif APP1 marker.
                             int adjustedChunkSize = chunkSize - WEBP_EXIF_APP1_SECTION_BYTE_LENGTH;
                             payload = Arrays.copyOfRange(payload, WEBP_EXIF_APP1_SECTION_BYTE_LENGTH,
